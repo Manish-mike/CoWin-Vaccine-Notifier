@@ -1,13 +1,16 @@
+'''
+Script: Covid Vaccine Slot Availability Notifier
+'''
+
 import requests
 from pygame import mixer 
 from datetime import datetime, timedelta
 import time
-from plyer import notification
-import json
 
-age = 21
-pincodes = ["110046" , "110058"]
-num_days = 7
+
+age = 23
+pincodes = ["110046"]
+num_days = 2
 
 print_flag = 'Y'
 
@@ -23,9 +26,10 @@ while True:
     for pincode in pincodes:   
         for given_date in actual_dates:
 
-            URL = "https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByPin?pincode={}&date={}".format(pincode, given_date
-
-            result = requests.get(URL)
+            URL = "https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByPin?pincode={}&date={}".format(pincode, given_date)
+            header = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.76 Safari/537.36'} 
+            
+            result = requests.get(URL, headers=header)
 
             if result.ok:
                 response_json = result.json()
@@ -34,42 +38,29 @@ while True:
                         for center in response_json["centers"]:
                             for session in center["sessions"]:
                                 if (session["min_age_limit"] <= age and session["available_capacity"] > 0 ) :
-                                    print('Center Name : ' , center['name'])
-                                    print('Available slots : ' , session['available_capacity'])
-                                    print('Pincode : ' , pincode)
-                                    print('Vaccine Name : ' , session['vaccine'])
-                                    print('Date : ', session['date'])
-                                    print('Price : ', center['fee_type'])
-                                    print('----------------------------------')
-                                    centerName = center['name']
-                                    availbleSlots = session['available_capacity']
-                                    dateOfSlot = session['date']
-                                    vaccineName = session['vaccine']
-                                    price = center['fee_type']
-                                    notification.notify(
-                                    title="Vaccine Slots Availble",
-                                    # the body of the notification
-                                    message=f"Center Name : {centerName}, {pincode} \nAvailable slots : {availbleSlots}, {price}\nVaccine : {vaccineName}, Date : {dateOfSlot}",
-                                    app_icon = r"icon\icon.ico",
-                                    timeout=5
-                                    )
+                                    print('Pincode: ' + pincode)
+                                    print("Available on: {}".format(given_date))
+                                    print("\t", center["name"])
+                                    print("\t", center["block_name"])
+                                    print("\t Price: ", center["fee_type"])
+                                    print("\t Availablity : ", session["available_capacity"])
+
+                                    if(session["vaccine"] != ''):
+                                        print("\t Vaccine type: ", session["vaccine"])
                                     print("\n")
                                     counter = counter + 1
             else:
                 print("No Response!")
-
+                
     if counter:
-        mixer.init()
-        mixer.music.load(r"sound\dingdong.wav")
-        mixer.music.play()
-        print("Search Completed!")
+        print("No Vaccination slot available!")
     else:
         mixer.init()
-        mixer.music.load(r"Notification Sounds.wav")
+        mixer.music.load('sound/dingdong.wav')
         mixer.music.play()
-        print("No Vaccination slot available!")
+        print("Search Completed!")
 
-    dt = datetime.now() + timedelta(minutes=30)
+    dt = datetime.now() + timedelta(minutes=3)
 
     while datetime.now() < dt:
-        time.sleep(10)
+        time.sleep(1)
